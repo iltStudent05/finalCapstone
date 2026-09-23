@@ -33,6 +33,7 @@ services:
       PORT: 4000
       MONGODB_URI: mongodb://admin:password@mongo:27017/task-tracker?authSource=admin
       JWT_SECRET: dev-secret-key-change-in-production
+      JWT_EXPIRES_IN: 7d
       CLIENT_URL: http://localhost:3000
     depends_on:
       mongo:
