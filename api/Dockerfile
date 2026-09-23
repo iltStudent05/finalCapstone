@@ -20,10 +20,10 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY api/package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY --from=api-build /app/api/dist ./dist
 
 EXPOSE 4000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]
