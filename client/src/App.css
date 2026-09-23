@@ -1,0 +1,25 @@
+/* App-level component styles.
+   Global tokens and `.app-container` layout live in index.css; these rules
+   build on top of them for the app shell and placeholder pages. */
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.app-container h1 {
+  color: var(--color-dark);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.app-container a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.app-container a:hover {
+  text-decoration: underline;
+}
