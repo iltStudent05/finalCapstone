@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capstone-api
+  namespace: capstone
+  labels:
+    app: capstone-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: capstone-api
+  template:
+    metadata:
+      labels:
+        app: capstone-api
+    spec:
+      containers:
+      - name: api
+        image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/capstone-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4000
+          name: http
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: NODE_ENV
+        - name: PORT
+          value: "4000"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: MONGODB_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: JWT_SECRET
+        - name: JWT_EXPIRES_IN
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: JWT_EXPIRES_IN
+        - name: CLIENT_URL
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: CLIENT_URL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: capstone-api
+  namespace: capstone
+  labels:
+    app: capstone-api
+spec:
+  type: ClusterIP
+  selector:
+    app: capstone-api
+  ports:
+  - port: 4000
+    targetPort: 4000
+    protocol: TCP
+    name: http

@@ -1,53 +1,40 @@
 # Build stage
-FROM node:18-alpine AS build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files for both client and api
+# Copy package files
 COPY package*.json ./
-COPY client/package*.json ./client/
-COPY api/package*.json ./api/
+COPY tsconfig*.json ./
+COPY tsconfig.node.json ./
+COPY vite.config.ts ./
+COPY vitest.config.ts ./
 
 # Install dependencies
-RUN npm install -w client -w api
+RUN npm install
 
 # Copy source code
-COPY client/src ./client/src
-COPY client/public ./client/public
-COPY client/index.html ./client/
-COPY client/vite.config.ts ./client/
-COPY client/tsconfig*.json ./client/
+COPY src ./src
+COPY public ./public
+COPY index.html ./
 
-COPY api/src ./api/src
-COPY api/tsconfig*.json ./api/
-
-# Build client
-WORKDIR /app/client
+# Build the React app
 RUN npm run build
 
-# Build API
-WORKDIR /app/api
-RUN npm run build
+# Production stage - serve with Nginx
+FROM nginx:alpine
 
-# Production stage - Nginx for client + Node for API
-FROM nginx:alpine AS final
+# Copy landing page to root
+COPY public/landing.html /usr/share/nginx/html/index.html
 
-# Install Node.js for the API container
-RUN apk add --no-cache nodejs npm
+# Copy React app from builder to /app
+COPY --from=builder /app/dist /usr/share/nginx/html/app
 
-# Copy Nginx config
-COPY client/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom Nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built client artifacts
-COPY --from=build /app/client/dist /usr/share/nginx/html/app
-COPY --from=build /app/client/public/landing.html /usr/share/nginx/html/landing/landing.html
-
-# Create API directory
-RUN mkdir -p /usr/share/nginx/html/landing
-
-# Note: For production, use separate containers for Nginx and Node.js
-# This is a simplified setup for local development
-
+# Expose port
 EXPOSE 80
 
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

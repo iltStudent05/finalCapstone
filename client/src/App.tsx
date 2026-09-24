@@ -1,27 +1,49 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
-
-// Placeholder pages - will be implemented in Phase 2
-function DashboardPage() {
-  return <div className="app-container"><h1>Dashboard (Coming Soon)</h1></div>
-}
-
-function LoginPage() {
-  return <div className="app-container"><h1>Login (Coming Soon)</h1></div>
-}
-
-function RegisterPage() {
-  return <div className="app-container"><h1>Register (Coming Soon)</h1></div>
-}
+import { AuthProvider } from './context/AuthContext'
+import { Navbar } from './components/Navbar'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { ProjectsPage } from './pages/ProjectsPage'
+import { TasksPage } from './pages/TasksPage'
 
 function App() {
   return (
     <BrowserRouter basename="/app">
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      </Routes>
+      <AuthProvider>
+        <Navbar />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects"
+            element={
+              <ProtectedRoute>
+                <ProjectsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <TasksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

@@ -1,29 +1,38 @@
-# Build stage for API
-FROM node:18-alpine AS api-build
+# Build stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
-COPY api/package*.json ./api/
-COPY api/tsconfig*.json ./api/
+COPY tsconfig*.json ./
 
-RUN npm install -w api
+# Install dependencies (including dev)
+RUN npm install
 
-COPY api/src ./api/src
+# Copy source code
+COPY src ./src
 
-WORKDIR /app/api
+# Compile TypeScript
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY api/package*.json ./
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
 RUN npm install --omit=dev
 
-COPY --from=api-build /app/api/dist ./dist
+# Copy compiled code from builder
+COPY --from=builder /app/dist ./dist
 
+# Expose port
 EXPOSE 4000
 
+# Start the server
 CMD ["node", "dist/server.js"]
+

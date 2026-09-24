@@ -1,5 +1,54 @@
-/* Global styles */
+/* Global styles and CSS Variables */
 :root {
+  /* Primary Colors */
+  --primary-color: #3b82f6;
+  --primary-dark: #1e40af;
+  --primary-light: #dbeafe;
+
+  /* Neutral Colors */
+  --text-dark: #1f2937;
+  --text-gray: #6b7280;
+  --text-light: #f3f4f6;
+  --bg-light: #f9fafb;
+  --bg-white: #ffffff;
+  --border-color: #e5e7eb;
+
+  /* Status Colors */
+  --status-todo-bg: #fef3c7;
+  --status-todo-color: #92400e;
+  --status-progress-bg: #bfdbfe;
+  --status-progress-color: #1e3a8a;
+  --status-review-bg: #ddd6fe;
+  --status-review-color: #4c1d95;
+  --status-done-bg: #bbf7d0;
+  --status-done-color: #065f46;
+
+  --status-planning-bg: #fef3c7;
+  --status-planning-color: #92400e;
+  --status-active-bg: #bfdbfe;
+  --status-active-color: #1e3a8a;
+  --status-onhold-bg: #fed7aa;
+  --status-onhold-color: #7c2d12;
+  --status-completed-bg: #bbf7d0;
+  --status-completed-color: #065f46;
+
+  /* Priority Colors */
+  --priority-low-bg: #e0e7ff;
+  --priority-low-color: #3730a3;
+  --priority-medium-bg: #fef3c7;
+  --priority-medium-color: #92400e;
+  --priority-high-bg: #fed7aa;
+  --priority-high-color: #7c2d12;
+  --priority-urgent-bg: #fecaca;
+  --priority-urgent-color: #7f1d1d;
+
+  /* Error & Success */
+  --error-color: #dc2626;
+  --error-bg: #fee2e2;
+  --success-color: #16a34a;
+  --success-bg: #dcfce7;
+
+  /* Legacy vars for compatibility */
   --color-primary: #3b82f6;
   --color-secondary: #10b981;
   --color-dark: #1f2937;
@@ -14,19 +63,33 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-light);
-  color: var(--color-text);
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.5;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  width: 100%;
 }
 
 .app-container {
@@ -34,3 +97,95 @@ body {
   margin: 0 auto;
   padding: 2rem;
 }
+
+/* Typography */
+h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+h2 {
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Links */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Messages */
+.error-message {
+  background: var(--error-bg);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--error-color);
+}
+
+.success-message {
+  background: var(--success-bg);
+  color: var(--success-color);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--success-color);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-gray);
+}
+

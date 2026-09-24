@@ -11,7 +11,7 @@
     "install:all": "npm install && npm install -w client && npm install -w api",
     "dev": "npm run dev -w client & npm run dev -w api",
     "build": "npm run build -w client && npm run build -w api",
-    "test": "npm run test -w client && npm run test -w api",
+    "test": "npm run test:run -w client && npm run test:run -w api",
     "lint": "npm run lint -w client && npm run lint -w api"
   },
   "keywords": [
