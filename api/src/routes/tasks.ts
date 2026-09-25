@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { Task, TASK_STATUSES, TASK_PRIORITIES } from '../models/Task.js'
 import { Comment } from '../models/Comment.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, requireRole } from '../middleware/auth.js'
 import { validate } from '../middleware/validate.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -78,10 +78,11 @@ router.put(
   })
 )
 
-// DELETE /api/tasks/:id — delete (protected, cascades to its comments)
+// DELETE /api/tasks/:id — delete (managers and admins only, cascades to its comments)
 router.delete(
   '/:id',
   requireAuth,
+  requireRole('admin', 'manager'),
   asyncHandler(async (req, res) => {
     const task = await Task.findByIdAndDelete(req.params.id)
     if (!task) throw new AppError(404, 'Task not found')
