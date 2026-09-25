@@ -24,7 +24,10 @@ Project Task Tracker is a web application for managing projects and tasks collab
 ### Authentication & Authorization
 - User registration and login with email/password
 - JWT token-based authentication
-- Role-based access control (admin, manager, contributor)
+- Role-based access control (admin, manager, contributor):
+  - **Projects** — create/update require `manager` or `admin`; delete requires `admin`
+  - **Tasks** — any authenticated user can create; delete requires `manager` or `admin`
+  - **Comments** — any authenticated user can create/edit/delete
 - Protected routes for authenticated users
 
 ### Project Management
@@ -88,6 +91,23 @@ docker compose up --build
 # - API: http://localhost:4001
 ```
 
+#### Seeding demo data (optional)
+
+Populate the database with sample users, projects, tasks, and comments:
+```bash
+cd api
+npm run seed        # wipe collections, then insert demo data
+npm run seed:clear  # wipe collections only
+```
+
+Seeded login accounts (all use password `password123`):
+
+| Email | Role |
+|-------|------|
+| admin@example.com | admin |
+| manager@example.com | manager |
+| contributor@example.com | contributor |
+
 **Note:** If you encounter port conflicts (e.g., MongoDB on 27017):
 ```bash
 # Stop local MongoDB
@@ -109,14 +129,15 @@ finalCapstone/
 │   ├── src/
 │   │   ├── routes/             # API route handlers
 │   │   ├── models/             # Mongoose schemas (User, Project, Task, Comment)
-│   │   ├── middleware/         # Auth, validation, error handling
+│   │   ├── middleware/         # Auth, RBAC, validation, error handling
 │   │   ├── config/             # Database and environment config
+│   │   ├── seed.ts            # Demo data seed / clear utility
 │   │   └── app.ts             # Express app setup
 │   ├── Dockerfile
 │   └── package.json
 ├── client/                      # React + TypeScript frontend
 │   ├── src/
-│   │   ├── pages/              # Page components (Dashboard, Login, etc)
+│   │   ├── pages/              # Page components (Dashboard, Login, Projects, ProjectDetail, Tasks)
 │   │   ├── components/         # Reusable components (Navbar, ProtectedRoute)
 │   │   ├── context/            # AuthContext for state management
 │   │   ├── api/                # API client (Axios with interceptors)
@@ -166,7 +187,7 @@ finalCapstone/
 | POST | `/api/auth/register` | Register new user |
 | POST | `/api/auth/login` | Login and get JWT token |
 
-### Dash board
+### Dashboard
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/dashboard` | Get aggregate statistics |
@@ -176,9 +197,9 @@ finalCapstone/
 |--------|----------|-------------|
 | GET | `/api/projects` | List all projects |
 | GET | `/api/projects/:id` | Get project by ID |
-| POST | `/api/projects` | Create new project (auth required) |
-| PUT | `/api/projects/:id` | Update project (auth required) |
-| DELETE | `/api/projects/:id` | Delete project (auth required) |
+| POST | `/api/projects` | Create new project (manager/admin) |
+| PUT | `/api/projects/:id` | Update project (manager/admin) |
+| DELETE | `/api/projects/:id` | Delete project (admin) |
 
 ### Tasks
 | Method | Endpoint | Description |
@@ -187,13 +208,15 @@ finalCapstone/
 | GET | `/api/tasks/:id` | Get task by ID |
 | POST | `/api/tasks` | Create new task (auth required) |
 | PUT | `/api/tasks/:id` | Update task (auth required) |
-| DELETE | `/api/tasks/:id` | Delete task (auth required) |
+| DELETE | `/api/tasks/:id` | Delete task (manager/admin) |
 
 ### Comments
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/comments` | List all comments |
+| GET | `/api/comments/:id` | Get comment by ID |
 | POST | `/api/comments` | Create new comment (auth required) |
+| PUT | `/api/comments/:id` | Update comment (auth required) |
 | DELETE | `/api/comments/:id` | Delete comment (auth required) |
 
 ## Testing and Verification
@@ -272,11 +295,24 @@ docker push <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/capstone-client:latest
 
 ### EKS Deployment
 
+The application is deployed live on AWS EKS (cluster `capstone`, region `us-east-1`):
+
+**http://a6edf61779f0b405abccc4bb450b5dd3-1760106026.us-east-1.elb.amazonaws.com/**
+
 ```bash
 # Update image references in k8s/*.yaml with your ACCOUNT_ID
 
 # Create EKS cluster (if needed)
-eksctl create cluster --name capstone --region us-east-1 --nodes 2 --node-type t3.medium
+eksctl create cluster --name capstone --region us-east-1 --nodes 2 --node-type t3.medium --managed --version 1.33
+
+# Enable dynamic EBS volumes (required for the MongoDB PVC on EKS 1.30+)
+eksctl utils associate-iam-oidc-provider --cluster capstone --region us-east-1 --approve
+eksctl create iamserviceaccount --name ebs-csi-controller-sa --namespace kube-system \
+  --cluster capstone --region us-east-1 --role-name AmazonEKS_EBS_CSI_DriverRole \
+  --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy --approve --role-only
+eksctl create addon --name aws-ebs-csi-driver --cluster capstone --region us-east-1 \
+  --service-account-role-arn arn:aws:iam::<ACCOUNT_ID>:role/AmazonEKS_EBS_CSI_DriverRole --force
+kubectl patch storageclass gp2 -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
 # Apply Kubernetes manifests
 kubectl apply -f k8s/namespace.yaml
@@ -291,6 +327,18 @@ kubectl get svc -n capstone
 
 # Get LoadBalancer URL
 kubectl get svc capstone-client -n capstone -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+
+# (Optional) Seed the cluster database via a port-forward
+kubectl port-forward -n capstone deploy/mongodb 27019:27017 &
+cd api && MONGODB_URI="mongodb://admin:mongoose@localhost:27019/task-tracker?authSource=admin" npm run seed
+```
+
+### Tearing down (stop AWS charges)
+
+```bash
+eksctl delete cluster --name capstone --region us-east-1
+aws ecr delete-repository --repository-name capstone-api --force --region us-east-1
+aws ecr delete-repository --repository-name capstone-client --force --region us-east-1
 ```
 
 ## Troubleshooting
@@ -323,24 +371,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
 - Pull request process
 - Testing requirements
 
-## License
-
-This project is created for educational purposes as part of an academic capstone.
-
-
-### Data Models
-- **User** — Authentication, roles (admin, manager, contributor)
-- **Project** — Team projects with metadata
-- **Task** — Individual tasks within projects with status tracking
-- **Comment** — Discussion on tasks
-
-### Features
-- Create and manage projects
-- Track tasks with status, priority, and assignment
-- Collaborate via comments
-- Dashboard with project/task statistics
-- Role-based access control
-
 ## CI/CD Pipeline
 
 GitHub Actions automates:
@@ -351,10 +381,6 @@ GitHub Actions automates:
 
 See [.github/workflows/ci.yml](.github/workflows/ci.yml) for details.
 
-## Team Members
-
-> Add your team member names and roles here
-
 ## License
 
-MIT
+This project is created for educational purposes as part of an academic capstone.

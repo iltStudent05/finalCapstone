@@ -32,11 +32,13 @@ curl -s "http://$URL/api/health"; echo
 
 ---
 
-## 0b. Deploy-From-Scratch Runbook (do this once, before the pre-flight)
+## 0b. Deploy-From-Scratch Runbook (reference only — already deployed)
 
-> Current state (as of writing): EKS cluster **`capstone`** is still being created by `eksctl`
-> (region `us-east-1`, 2× t3.medium). `kubectl` won't work until it finishes (~15–20 min total).
-> AWS account: **891612576490** · ECR repos already exist: `capstone-client`, `capstone-api`.
+> Current state: the EKS cluster **`capstone`** is **live** (region `us-east-1`, 2× t3.medium)
+> and the app is deployed. Public URL:
+> **http://a6edf61779f0b405abccc4bb450b5dd3-1760106026.us-east-1.elb.amazonaws.com/**
+> AWS account: **891612576490** · ECR repos: `capstone-client`, `capstone-api`.
+> The steps below are only needed to rebuild the environment from scratch.
 
 ```bash
 ACCOUNT_ID=891612576490
@@ -79,7 +81,6 @@ kubectl get svc capstone-client -n capstone \
 > `curl -s http://<ELB-URL>/api/health` until it returns JSON.
 > Seed demo data so the dashboard isn't empty (point the API/seed at the prod Mongo, or
 > just register + create a project/task/comment live during the demo).
-> ⚠️ Before presenting, change the placeholder `JWT_SECRET` in `k8s/secrets.yaml`.
 
 ---
 
