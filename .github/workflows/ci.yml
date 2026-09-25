@@ -124,7 +124,8 @@ jobs:
           file: ./client/Dockerfile
           push: false
           tags: task-tracker-web:latest
-          cache-from: type=registry
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build API Docker image
         uses: docker/build-push-action@v6
@@ -133,7 +134,8 @@ jobs:
           file: ./api/Dockerfile
           push: false
           tags: task-tracker-api:latest
-          cache-from: type=registry
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   summary:
     name: CI Pipeline Summary
