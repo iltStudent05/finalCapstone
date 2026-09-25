@@ -11,7 +11,9 @@
     "lint": "eslint src --ext ts",
     "type-check": "tsc --noEmit",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "seed": "tsx src/seed.ts",
+    "seed:clear": "tsx src/seed.ts clear"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
