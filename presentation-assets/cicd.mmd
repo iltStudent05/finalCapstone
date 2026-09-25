@@ -1,0 +1,19 @@
+flowchart LR
+    Dev([Developer])
+    Push["git push / PR<br/>main - dev - feature/**"]
+
+    subgraph GHA["GitHub Actions Pipeline"]
+        direction LR
+        S1["1. Lint &amp; Type-Check<br/>tsc --noEmit<br/>Node 18 &amp; 20 matrix"]
+        S2["2. Build<br/>Vite + TS<br/>upload artifacts"]
+        S3["3. Test<br/>Vitest<br/>client + API"]
+        S4["4. Docker Build<br/>both images<br/>(main / dev only)"]
+        S5["5. Summary<br/>aggregate results<br/>fail on real break"]
+    end
+
+    ECR["Amazon ECR"]
+    EKS["AWS EKS<br/>kubectl apply"]
+
+    Dev --> Push --> S1 --> S2 --> S3 --> S4 --> S5
+    S4 -.->|push images| ECR
+    ECR -.->|manual deploy| EKS

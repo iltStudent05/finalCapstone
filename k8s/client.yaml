@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/capstone-client:latest
+        image: 891612576490.dkr.ecr.us-east-1.amazonaws.com/capstone-client:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80

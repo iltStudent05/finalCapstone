@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import request from 'supertest'
 import { app } from './app.js'
+import { signToken } from './middleware/auth.js'
+
+// Helper: build an Authorization header for a given role. Role guards run
+// before any database access, so these tests need no live MongoDB.
+const bearer = (role: 'admin' | 'manager' | 'contributor') =>
+  `Bearer ${signToken({ id: '000000000000000000000000', role })}`
 
 /**
  * These tests exercise the Express app in isolation via supertest.
@@ -42,5 +48,41 @@ describe('API app', () => {
     const res = await request(app).post('/api/projects').send({ name: 'Blocked' })
     expect(res.status).toBe(401)
     expect(res.body.error).toBe('Authentication required')
+  })
+
+  it('contributors cannot create projects (403)', async () => {
+    const res = await request(app)
+      .post('/api/projects')
+      .set('Authorization', bearer('contributor'))
+      .send({ name: 'Contributor Project' })
+    expect(res.status).toBe(403)
+    expect(res.body.error).toBe('Insufficient permissions')
+  })
+
+  it('managers pass the project role guard and reach validation (400 on bad body)', async () => {
+    const res = await request(app)
+      .post('/api/projects')
+      .set('Authorization', bearer('manager'))
+      .send({}) // missing required name -> validation error, not a role error
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('Validation failed')
+    expect(res.body.details).toHaveProperty('name')
+  })
+
+  it('contributors cannot delete tasks (403)', async () => {
+    const res = await request(app)
+      .delete('/api/tasks/000000000000000000000000')
+      .set('Authorization', bearer('contributor'))
+    expect(res.status).toBe(403)
+    expect(res.body.error).toBe('Insufficient permissions')
+  })
+
+  it('contributors may create tasks (auth passes; 400 on bad body, not 403)', async () => {
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', bearer('contributor'))
+      .send({}) // missing required fields -> validation error, proving no role block
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('Validation failed')
   })
 })

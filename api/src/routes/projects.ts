@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { Project, PROJECT_STATUSES } from '../models/Project.js'
 import { Task } from '../models/Task.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, requireRole } from '../middleware/auth.js'
 import { validate } from '../middleware/validate.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -45,10 +45,11 @@ router.get(
   })
 )
 
-// POST /api/projects — create (protected)
+// POST /api/projects — create (managers and admins only)
 router.post(
   '/',
   requireAuth,
+  requireRole('admin', 'manager'),
   validate(createSchema),
   asyncHandler(async (req, res) => {
     const project = await Project.create({
@@ -59,10 +60,11 @@ router.post(
   })
 )
 
-// PUT /api/projects/:id — update (protected)
+// PUT /api/projects/:id — update (managers and admins only)
 router.put(
   '/:id',
   requireAuth,
+  requireRole('admin', 'manager'),
   validate(updateSchema),
   asyncHandler(async (req, res) => {
     const project = await Project.findByIdAndUpdate(req.params.id, req.body, {
@@ -74,10 +76,11 @@ router.put(
   })
 )
 
-// DELETE /api/projects/:id — delete (protected, cascades to its tasks)
+// DELETE /api/projects/:id — delete (admins only, cascades to its tasks)
 router.delete(
   '/:id',
   requireAuth,
+  requireRole('admin'),
   asyncHandler(async (req, res) => {
     const project = await Project.findByIdAndDelete(req.params.id)
     if (!project) throw new AppError(404, 'Project not found')

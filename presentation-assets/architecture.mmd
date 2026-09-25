@@ -1,0 +1,33 @@
+flowchart TB
+    User([User / Browser])
+
+    subgraph AWS["AWS EKS Cluster - namespace: capstone"]
+        LB["AWS LoadBalancer<br/>(public URL)"]
+
+        subgraph ClientPod["Client Pod x2 - Nginx"]
+            direction TB
+            Landing["/  -&gt;  landing.html<br/>(static HTML5 + CSS3)"]
+            SPA["/app/*  -&gt;  React SPA<br/>(Vite build)"]
+            Proxy["/api/*  -&gt;  reverse proxy"]
+        end
+
+        subgraph ApiPod["API Pods x2 - Express + TypeScript"]
+            direction TB
+            Auth["JWT auth middleware<br/>requireAuth / requireRole"]
+            Routes["Routes: auth, projects,<br/>tasks, comments, dashboard"]
+            Mongoose["Mongoose ODM"]
+        end
+
+        Mongo[("MongoDB<br/>persistent volume")]
+    end
+
+    ECR["Amazon ECR<br/>capstone-client / capstone-api images"]
+    CI["GitHub Actions CI/CD<br/>lint -&gt; build -&gt; test -&gt; docker"]
+
+    User -->|HTTP| LB
+    LB --> ClientPod
+    Proxy -->|"/api"| ApiPod
+    Routes --> Mongoose --> Mongo
+    CI -.->|push images| ECR
+    ECR -.->|pull images| ClientPod
+    ECR -.->|pull images| ApiPod
