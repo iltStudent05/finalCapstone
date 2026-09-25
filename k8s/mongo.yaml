@@ -21,6 +21,8 @@ metadata:
     app: mongodb
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mongodb
@@ -62,16 +64,20 @@ spec:
             - mongosh
             - "--eval"
             - "db.adminCommand('ping')"
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 40
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 5
         readinessProbe:
           exec:
             command:
             - mongosh
             - "--eval"
             - "db.adminCommand('ping')"
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 5
       volumes:
       - name: mongodb-storage
         persistentVolumeClaim:

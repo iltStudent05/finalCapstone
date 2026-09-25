@@ -2,7 +2,7 @@
 
 > A collaborative project management application demonstrating full-stack development with modern web technologies.
 >
-> **Live Deployment:** [LoadBalancer URL] _(available after EKS deployment)_
+> **Live Deployment:** http://a6edf61779f0b405abccc4bb450b5dd3-1760106026.us-east-1.elb.amazonaws.com/ &nbsp;(landing page) — React app at [/app/](http://a6edf61779f0b405abccc4bb450b5dd3-1760106026.us-east-1.elb.amazonaws.com/app/) _(AWS EKS, us-east-1)_
 
 ## Team
 
