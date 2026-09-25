@@ -120,7 +120,7 @@ jobs:
       - name: Build Docker images
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./client
           file: ./client/Dockerfile
           push: false
           tags: task-tracker-web:latest
@@ -130,7 +130,7 @@ jobs:
       - name: Build API Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./api
           file: ./api/Dockerfile
           push: false
           tags: task-tracker-api:latest
